@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AP Physics 2 — Quantum Mechanics Quiz</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#0a0c14; --surface:#111320; --surface2:#181b2c; --surface3:#1e2136;
+  --border:#252840; --text:#e8eaf6; --text-muted:#8b90b8; --text-dim:#484c6e;
+  --accent:#7c9ef8; --accent2:#a78bfa; --accent3:#34d399;
+  --accent4:#fbbf24; --accent5:#f87171; --accent6:#fb7185;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
+
+/* ── STARFIELD BG ── */
+#stars{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:0}
+
+/* ── LAYOUT ── */
+.wrap{position:relative;z-index:1;max-width:860px;margin:0 auto;padding:32px 20px 80px}
+
+/* ── HEADER ── */
+.quiz-header{text-align:center;padding:40px 0 32px}
+.quiz-header .tag{font-size:11px;letter-spacing:3px;text-transform:uppercase;color:var(--accent);font-weight:600;margin-bottom:12px}
+.quiz-header h1{font-size:36px;font-weight:700;letter-spacing:-1px;margin-bottom:10px;background:linear-gradient(135deg,#7c9ef8,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.quiz-header p{font-size:15px;color:var(--text-muted);max-width:500px;margin:0 auto}
+
+/* ── PROGRESS ── */
+.progress-bar-wrap{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:16px 20px;margin-bottom:28px;display:flex;align-items:center;gap:16px}
+.progress-track{flex:1;height:6px;background:var(--border);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:3px;transition:width 0.5s cubic-bezier(.4,0,.2,1)}
+.progress-text{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent);white-space:nowrap;font-weight:600}
+.score-live{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--accent3);white-space:nowrap}
+
+/* ── QUESTION CARD ── */
+.q-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px 28px 22px;margin-bottom:20px;transition:border-color .3s;position:relative;overflow:hidden}
+.q-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:linear-gradient(90deg,var(--accent),var(--accent2));transform:scaleX(0);transform-origin:left;transition:transform .4s ease}
+.q-card.answered::before{transform:scaleX(1)}
+.q-card.correct{border-color:var(--accent3)}
+.q-card.correct::before{background:linear-gradient(90deg,var(--accent3),#22d3a0)}
+.q-card.incorrect{border-color:var(--accent5)}
+.q-card.incorrect::before{background:linear-gradient(90deg,var(--accent5),#fb923c)}
+
+.q-num{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--text-dim);font-weight:600;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.q-badge{background:var(--surface2);border:1px solid var(--border);border-radius:20px;padding:2px 10px;font-size:10px;color:var(--text-dim)}
+.q-badge.calc{color:var(--accent4);border-color:var(--accent4)44}
+.q-badge.freeresponse{color:var(--accent2);border-color:var(--accent2)44}
+
+.q-text{font-size:16px;font-weight:600;color:var(--text);line-height:1.55;margin-bottom:20px}
+.q-text .formula{font-family:'JetBrains Mono',monospace;background:var(--surface2);border:1px solid var(--border);border-radius:5px;padding:1px 7px;font-size:14px;color:var(--accent4)}
+
+/* ── OPTIONS ── */
+.options{display:flex;flex-direction:column;gap:9px}
+.opt{display:flex;align-items:flex-start;gap:12px;padding:13px 16px;border:1.5px solid var(--border);border-radius:10px;cursor:pointer;transition:all .2s;background:transparent;width:100%;text-align:left;font-family:'Space Grotesk',sans-serif;color:var(--text-muted);font-size:14px;line-height:1.5}
+.opt:hover:not([disabled]){border-color:var(--accent);background:rgba(124,158,248,.06);color:var(--text)}
+.opt-letter{min-width:26px;height:26px;border-radius:50%;border:1.5px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;flex-shrink:0;transition:all .2s;color:var(--text-dim);margin-top:1px}
+.opt:hover:not([disabled]) .opt-letter{border-color:var(--accent);color:var(--accent)}
+.opt.selected{border-color:var(--accent);background:rgba(124,158,248,.1)}
+.opt.selected .opt-letter{background:var(--accent);border-color:var(--accent);color:#0a0c14}
+.opt.correct-ans{border-color:var(--accent3)!important;background:rgba(52,211,153,.1)!important;color:var(--text)!important}
+.opt.correct-ans .opt-letter{background:var(--accent3);border-color:var(--accent3);color:#0a0c14}
+.opt.wrong-ans{border-color:var(--accent5)!important;background:rgba(248,113,113,.08)!important}
+.opt.wrong-ans .opt-letter{background:var(--accent5);border-color:var(--accent5);color:#0a0c14}
+.opt[disabled]{cursor:default}
+.opt-text{flex:1}
+
+/* ── FREE RESPONSE ── */
+.fr-wrap{display:flex;flex-direction:column;gap:10px}
+.fr-input{width:100%;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;padding:14px 16px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;resize:vertical;min-height:90px;transition:border-color .2s;outline:none}
+.fr-input:focus{border-color:var(--accent)}
+.fr-input[disabled]{opacity:0.7;cursor:default}
+.fr-submit{background:var(--accent);color:#0a0c14;border:none;border-radius:8px;padding:10px 22px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;cursor:pointer;transition:opacity .2s;align-self:flex-start}
+.fr-submit:hover{opacity:.85}
+.fr-submit[disabled]{opacity:.4;cursor:default}
+
+/* ── EXPLANATION ── */
+.explanation{margin-top:14px;padding:14px 16px;background:var(--surface2);border-radius:10px;border-left:3px solid var(--accent3);font-size:13.5px;color:var(--text-muted);line-height:1.7;display:none}
+.explanation.show{display:block;animation:fadeSlide .3s ease}
+.explanation strong{color:var(--text)}
+.explanation .calc-work{font-family:'JetBrains Mono',monospace;background:var(--bg);border:1px solid var(--border);border-radius:6px;padding:10px 14px;margin:8px 0;font-size:13px;color:var(--accent4);line-height:1.8}
+.explanation.wrong-exp{border-left-color:var(--accent5)}
+
+@keyframes fadeSlide{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── SUBMIT BUTTON ── */
+.submit-zone{text-align:center;margin-top:10px}
+.check-btn{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0a0c14;border:none;border-radius:10px;padding:13px 32px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:opacity .2s;letter-spacing:.3px}
+.check-btn:hover{opacity:.88}
+.check-btn[disabled]{opacity:.35;cursor:default}
+
+/* ── RESULTS SCREEN ── */
+#results{display:none;text-align:center;padding:60px 20px}
+.result-score{font-size:72px;font-weight:700;font-family:'JetBrains Mono',monospace;margin:20px 0}
+.result-label{font-size:18px;color:var(--text-muted);margin-bottom:8px}
+.result-grade{font-size:14px;font-weight:600;padding:6px 18px;border-radius:20px;display:inline-block;margin-bottom:32px}
+.grade-5{background:rgba(52,211,153,.15);color:var(--accent3);border:1px solid var(--accent3)55}
+.grade-4{background:rgba(124,158,248,.15);color:var(--accent);border:1px solid var(--accent)55}
+.grade-3{background:rgba(251,191,36,.15);color:var(--accent4);border:1px solid var(--accent4)55}
+.grade-low{background:rgba(248,113,113,.15);color:var(--accent5);border:1px solid var(--accent5)55}
+.result-breakdown{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:24px;max-width:480px;margin:0 auto 32px;text-align:left}
+.breakdown-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.breakdown-row:last-child{border-bottom:none}
+.br-icon{font-size:16px;flex-shrink:0}
+.br-q{flex:1;color:var(--text-muted)}
+.br-result{font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700}
+.br-correct{color:var(--accent3)} .br-wrong{color:var(--accent5)} .br-partial{color:var(--accent4)}
+.retry-btn{background:var(--surface2);border:1.5px solid var(--border);color:var(--text);border-radius:10px;padding:12px 28px;font-family:'Space Grotesk',sans-serif;font-weight:600;font-size:14px;cursor:pointer;transition:all .2s;margin:0 8px}
+.retry-btn:hover{border-color:var(--accent);color:var(--accent)}
+.sim-link{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0a0c14;border:none;border-radius:10px;padding:12px 28px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:14px;cursor:pointer;text-decoration:none;display:inline-block;margin:0 8px}
+.quiz-link{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#0d0f17;border:none;border-radius:8px;padding:8px 18px;font-family:'Space Grotesk',sans-serif;font-weight:700;font-size:13px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;letter-spacing:.2px;transition:opacity .2s}
+.quiz-link:hover{opacity:.85}
+/* ── MISC ── */
+::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--surface)}::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
+.confetti-burst{position:fixed;pointer-events:none;z-index:999}
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="wrap">
+  <div class="quiz-header">
+    <div class="tag">AP Physics 2 · Unit 7 · Quantum Mechanics</div>
+    <h1>Wave–Particle Duality Quiz</h1>
+    <p>11 questions covering quantum mechanics, the photoelectric effect, de Broglie wavelength, and atomic spectra.</p>
+  </div>
+
+  <div class="progress-bar-wrap">
+    <div class="progress-track"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+    <div class="progress-text" id="progressText">0 / 11</div>
+    <div class="score-live" id="scoreLive">Score: 0</div>
+  </div>
+
+  <div id="quizBody"></div>
+
+  <div class="submit-zone">
+    <button class="check-btn" id="submitBtn" onclick="submitQuiz()">Submit Quiz →</button>
+    <a href="index.html" class="quiz-link">Back to Simulation →</a>
+  </div>
+
+  <div id="results">
+    <div class="tag" style="color:var(--accent4);letter-spacing:2px;font-size:11px;font-weight:600;text-transform:uppercase;margin-bottom:16px">Quiz Complete</div>
+    <div class="result-label">Your Score</div>
+    <div class="result-score" id="resultScore">0/11</div>
+    <div class="result-grade" id="resultGrade"></div>
+    <div class="result-breakdown" id="breakdown"></div>
+    <a href="ap-physics2.html" class="sim-link">← Back to Simulations</a>
+    <button class="retry-btn" onclick="retryQuiz()">↺ Retry Quiz</button>
+  </div>
+</div>
+
+<script>
+// ── STARFIELD ──
+const sc=document.getElementById('stars'),sctx=sc.getContext('2d');
+sc.width=window.innerWidth;sc.height=window.innerHeight;
+const stars=Array.from({length:180},()=>({x:Math.random()*sc.width,y:Math.random()*sc.height,r:Math.random()*1.2+.2,a:Math.random(),da:(Math.random()-.5)*.003+.002}));
+function animStars(){sctx.clearRect(0,0,sc.width,sc.height);for(const s of stars){s.a+=s.da;if(s.a>1||s.a<0)s.da*=-1;sctx.beginPath();sctx.arc(s.x,s.y,s.r,0,Math.PI*2);sctx.fillStyle=`rgba(180,190,255,${s.a*.4})`;sctx.fill();}requestAnimationFrame(animStars);}
+animStars();
+window.addEventListener('resize',()=>{sc.width=window.innerWidth;sc.height=window.innerHeight;});
+
+// ── QUIZ DATA ──
+// correct: index (0-based) for MC, or null for FR
+// For FR: checker function
+const h = 6.626e-34, c_light = 3e8, eV = 1.602e-19;
+
+const QUESTIONS = [
+  {
+    n: 1, type:'mc',
+    tag: 'Multiple Choice',
+    text: 'What is an example of a quantized property?',
+    opts: ['Mass','Charge','Energy','Momentum','All of the above'],
+    correct: 4, // E) All of the above
+    exp: `<strong>Answer: E — All of the above.</strong> All four properties can be quantized in certain contexts. In quantum mechanics, energy is always quantized (e.g., atomic energy levels). Charge is quantized in units of e = 1.602×10⁻¹⁹ C. Momentum and mass also appear in discrete quantum contexts (e.g., angular momentum is quantized as multiples of ℏ).`
+  },
+  {
+    n: 2, type:'mc',
+    tag: 'Multiple Choice',
+    text: 'Why is blackbody radiation considered quantized?',
+    opts: [
+      'The intensity of light emitted at a given wavelength is continuous.',
+      'The intensity of light emitted at a given wavelength has discrete peaks that are not continuous.',
+      'The wavelength of light emitted depends on the intensity of the light.',
+      'The light is only emitted when the object is heated.'
+    ],
+    correct: 1,
+    exp: `<strong>Answer: B.</strong> Planck (1900) solved the blackbody problem by assuming energy is emitted in discrete chunks: E = hf. Classical physics predicted an "ultraviolet catastrophe" — infinite energy emission at short wavelengths. Quantization produces discrete peaks in the emission spectrum that match experiment perfectly.`
+  },
+  {
+    n: 3, type:'mc',
+    tag: 'Multiple Choice',
+    text: 'Why is atomic emission spectra considered quantized?',
+    opts: [
+      'Electrons release light when they lose continuous units of energy.',
+      'Electrons absorb photons when they lose energy from transitioning from high to low energy levels.',
+      'Electrons release light in discrete lines when they transition from high to low energy levels — energy levels are quantized.'
+    ],
+    correct: 2,
+    exp: `<strong>Answer: C.</strong> Electrons in atoms can only exist at specific energy levels (quantized). When an electron drops from a higher to a lower level, it emits a photon with energy exactly equal to the energy difference: E = hf = E₂ − E₁. This produces sharp, discrete spectral lines rather than a continuous spectrum.`
+  },
+  {
+    n: 4, type:'mc',
+    tag: 'Multiple Choice',
+    text: 'Why is the photoelectric effect considered quantized?',
+    opts: [
+      'Photons are considered particles, whose energy is determined by frequency.',
+      'Photons carry continuous amounts of energy that is defined by the intensity of the light.',
+      'Photons are waves, and their energy is determined by the amplitude of the wave.'
+    ],
+    correct: 0,
+    exp: `<strong>Answer: A.</strong> Einstein (1905) proved that light comes in discrete packets called photons, each with energy E = hf. It is frequency — not intensity — that determines whether an electron is ejected and how much kinetic energy it gets. This is incompatible with classical wave theory, which predicted energy depends on amplitude.`
+  },
+  {
+    n: 5, type:'mc',
+    tag: 'Multiple Choice',
+    text: 'Why can particles be considered to exhibit both wave-like and particle-like behaviour?',
+    opts: [
+      'Particles change speed as they transition mediums.',
+      'Particles can transfer momentum as they collide with other particles.',
+      'Particles have a wavelength proportional to the velocity of the particle.',
+      'Particles, when passed through double slits, have interference fringes — similar to the pattern created by interfering waves.'
+    ],
+    correct: 3,
+    exp: `<strong>Answer: D.</strong> Both C and D are related to wave-particle duality, but D is the most direct evidence: the double-slit interference pattern appears even when particles (electrons, photons) are fired one at a time. This can only be explained by wave behavior — each particle interferes with itself. Note: C (de Broglie λ = h/mv) is the mathematical basis, but D is the experimental evidence.`
+  },
+  {
+    n: 6, type:'mc',
+    tag: 'Multiple Choice',
+    text: 'How does quantum theory describe an electron orbiting a nucleus?',
+    opts: [
+      'Electrons can only exist in certain discrete energy levels.',
+      'Electrons can have any continuous energy level.',
+      'Electrons can exist between energy levels.'
+    ],
+    correct: 0,
+    exp: `<strong>Answer: A.</strong> The Bohr model and full quantum mechanics both require electrons to occupy discrete, quantized energy levels (called orbitals). An electron cannot exist between levels — it can only jump discontinuously from one level to another, emitting or absorbing a photon equal to the energy difference.`
+  },
+  {
+    n: 7, type:'mc',
+    tag: 'Multiple Choice',
+    text: 'What is considered a property of <em>particles</em>?',
+    opts: [
+      'Photoelectric effect',
+      'Diffraction',
+      'Evaporation',
+      'Interference'
+    ],
+    correct: 0,
+    exp: `<strong>Answer: A — Photoelectric effect.</strong> The photoelectric effect demonstrates the particle nature of light: photons act as discrete packets that collide with and eject electrons. Diffraction (B) and interference (D) are wave properties. Evaporation (C) is a thermodynamic process unrelated to wave-particle duality.`
+  },
+  {
+    n: 8, type:'mc',
+    tag: 'Calculation',
+    tagClass: 'calc',
+    text: 'How much energy does a photon with a frequency of 10³ Hz have? (h = 6.626 × 10⁻³⁴ J·s)',
+    opts: [
+      '6.63 × 10⁻³¹ J',
+      '7 × 10⁻³¹ J',
+      '8 × 10⁻²¹ J',
+      '7.21 × 10⁻⁴¹ J'
+    ],
+    correct: 0,
+    exp: `<strong>Answer: A.</strong><div class="calc-work">E = hf
+E = (6.626 × 10⁻³⁴ J·s)(10³ Hz)
+E = 6.626 × 10⁻³¹ J
+≈ 6.63 × 10⁻³¹ J</div>Simply multiply Planck's constant by the frequency. The exponent: 10⁻³⁴ × 10³ = 10⁻³¹.`
+  },
+  {
+    n: 9, type:'mc',
+    tag: 'Multiple Choice',
+    text: 'Why are photons sometimes considered particles?',
+    opts: [
+      'They can transfer quantized amounts of energy and momentum to other particles.',
+      'They have mass and charge.',
+      'They can make up matter.',
+      'Photons can become absorbed by materials and become stored energy.'
+    ],
+    correct: 0,
+    exp: `<strong>Answer: A.</strong> Photons behave as particles because they interact discretely — one photon ejects one electron in the photoelectric effect, carrying a definite, quantized momentum p = h/λ and energy E = hf. Photons are massless (B is wrong) and do not make up ordinary matter (C is wrong). D is partially true but not the reason they're called particles.`
+  },
+  {
+    n: 10, type:'fr',
+    tag: 'Free Response',
+    tagClass: 'freeresponse',
+    text: 'When monochromatic light is incident on the surface of a metal, there is a minimum frequency above which electrons are ejected — regardless of the intensity of the light. <strong>Which model of light supports this, and why?</strong>',
+    exp: `<strong>Model: Particle (photon) model of light.</strong><br><br>
+The particle model explains the threshold frequency because:<br>
+• Each photon carries a discrete, fixed energy E = hf. A single photon interacts with a single electron.<br>
+• For ejection, the photon energy must exceed the metal's work function: hf ≥ φ.<br>
+• Below the threshold frequency f₀ = φ/h, no individual photon has enough energy to free an electron — no matter how many photons arrive (i.e., intensity doesn't matter).<br><br>
+The wave model <em>fails</em> because it predicts that any frequency, given enough intensity, should eventually eject electrons by accumulating energy — which is experimentally false.`
+  },
+  {
+    n: 11, type:'fr',
+    tag: 'Calculation — Free Response',
+    tagClass: 'calc',
+    text: 'A photon in empty space has a wavelength of 300,000 nm. How much energy does this photon have? Show your work. (h = 6.626 × 10⁻³⁴ J·s, c = 3.00 × 10⁸ m/s)',
+    exp: `<strong>Solution:</strong><div class="calc-work">Convert wavelength to meters:
+λ = 300,000 nm = 300,000 × 10⁻⁹ m = 3.00 × 10⁻⁴ m
+
+Use E = hc/λ:
+E = (6.626 × 10⁻³⁴ J·s)(3.00 × 10⁸ m/s) / (3.00 × 10⁻⁴ m)
+E = (1.988 × 10⁻²⁵) / (3.00 × 10⁻⁴)
+E = 6.63 × 10⁻²² J</div>
+Note: 300,000 nm = 0.3 mm — this is <strong>microwave/far-infrared radiation</strong>, very low energy photons. For reference, visible light (400–700 nm) has photon energies ~10,000× larger.`
+  }
+];
+
+// ── STATE ──
+let answered = new Array(QUESTIONS.length).fill(false);
+let scoreArr = new Array(QUESTIONS.length).fill(null); // null=unanswered, true=correct, false=wrong, 'partial'=fr
+let liveScore = 0;
+
+function buildQuiz(){
+  const body = document.getElementById('quizBody');
+  body.innerHTML = '';
+  QUESTIONS.forEach((q, qi) => {
+    const card = document.createElement('div');
+    card.className = 'q-card';
+    card.id = `qcard-${qi}`;
+
+    const tagClass = q.tagClass || '';
+    let html = `<div class="q-num">Question ${q.n} of ${QUESTIONS.length} <span class="q-badge ${tagClass}">${q.tag}</span></div>
+                <div class="q-text">${q.text}</div>`;
+
+    if(q.type === 'mc'){
+      html += `<div class="options" id="opts-${qi}">`;
+      q.opts.forEach((opt, oi) => {
+        const letter = String.fromCharCode(65+oi);
+        html += `<button class="opt" id="opt-${qi}-${oi}" onclick="selectOpt(${qi},${oi})">
+          <span class="opt-letter">${letter}</span>
+          <span class="opt-text">${opt}</span>
+        </button>`;
+      });
+      html += `</div>`;
+    } else {
+      html += `<div class="fr-wrap">
+        <textarea class="fr-input" id="fr-${qi}" placeholder="Write your answer here…"></textarea>
+        <button class="fr-submit" id="fr-submit-${qi}" onclick="submitFR(${qi})">Check Answer</button>
+      </div>`;
+    }
+
+    html += `<div class="explanation" id="exp-${qi}">${q.exp}</div>`;
+    card.innerHTML = html;
+    body.appendChild(card);
+  });
+  updateProgress();
+}
+
+function selectOpt(qi, oi){
+  if(answered[qi]) return;
+  // Deselect all
+  QUESTIONS[qi].opts.forEach((_,i)=>{
+    document.getElementById(`opt-${qi}-${i}`).classList.remove('selected');
+  });
+  document.getElementById(`opt-${qi}-${oi}`).classList.add('selected');
+  // Store pending
+  document.getElementById(`qcard-${qi}`).dataset.pending = oi;
+}
+
+function revealMC(qi){
+  const q = QUESTIONS[qi];
+  const card = document.getElementById(`qcard-${qi}`);
+  const pending = parseInt(card.dataset.pending);
+  if(isNaN(pending)) return false; // nothing selected
+
+  answered[qi] = true;
+  const isCorrect = pending === q.correct;
+  scoreArr[qi] = isCorrect;
+  if(isCorrect) liveScore++;
+
+  q.opts.forEach((_,i)=>{
+    const btn = document.getElementById(`opt-${qi}-${i}`);
+    btn.disabled = true;
+    if(i === q.correct) btn.classList.add('correct-ans');
+    if(i === pending && !isCorrect) btn.classList.add('wrong-ans');
+  });
+
+  card.classList.add('answered', isCorrect ? 'correct' : 'incorrect');
+  const exp = document.getElementById(`exp-${qi}`);
+  exp.classList.add('show');
+  if(!isCorrect) exp.classList.add('wrong-exp');
+  updateProgress();
+  return true;
+}
+
+function submitFR(qi){
+  const input = document.getElementById(`fr-${qi}`);
+  const val = input.value.trim();
+  if(!val) return;
+  answered[qi] = true;
+  scoreArr[qi] = 'partial'; // free response gets partial credit marker
+  input.disabled = true;
+  document.getElementById(`fr-submit-${qi}`).disabled = true;
+  const card = document.getElementById(`qcard-${qi}`);
+  card.classList.add('answered','correct');
+  const exp = document.getElementById(`exp-${qi}`);
+  exp.classList.add('show');
+  updateProgress();
+  document.getElementById('scoreLive').textContent = `Score: ${liveScore}`;
+}
+
+function updateProgress(){
+  const done = answered.filter(Boolean).length;
+  const pct = (done / QUESTIONS.length)*100;
+  document.getElementById('progressFill').style.width = pct+'%';
+  document.getElementById('progressText').textContent = `${done} / ${QUESTIONS.length}`;
+  document.getElementById('scoreLive').textContent = `Score: ${liveScore}`;
+}
+
+function submitQuiz(){
+  // Auto-reveal any MC that have pending selection but not confirmed
+  let allAttempted = true;
+  QUESTIONS.forEach((q,qi)=>{
+    if(!answered[qi]){
+      if(q.type==='mc'){
+        const card = document.getElementById(`qcard-${qi}`);
+        if(card.dataset.pending !== undefined && card.dataset.pending !== ''){
+          revealMC(qi);
+        } else {
+          allAttempted = false;
+        }
+      } else {
+        allAttempted = false;
+      }
+    }
+  });
+
+  if(!allAttempted){
+    // Flash unanswered questions
+    QUESTIONS.forEach((q,qi)=>{
+      if(!answered[qi]){
+        const card = document.getElementById(`qcard-${qi}`);
+        card.style.borderColor='var(--accent4)';
+        setTimeout(()=>card.style.borderColor='',1200);
+        card.scrollIntoView({behavior:'smooth',block:'center'});
+      }
+    });
+    return;
+  }
+
+  // Show results
+  document.getElementById('quizBody').style.display='none';
+  document.getElementById('submitBtn').style.display='none';
+  document.querySelector('.progress-bar-wrap').style.display='none';
+  document.querySelector('.quiz-header').style.display='none';
+  showResults();
+}
+
+function showResults(){
+  const mcCorrect = scoreArr.filter(s=>s===true).length;
+  const frCount = scoreArr.filter(s=>s==='partial').length;
+  const total = QUESTIONS.length;
+  const pct = Math.round((mcCorrect/total)*100);
+
+  document.getElementById('resultScore').textContent = `${mcCorrect}/${total}`;
+  document.getElementById('resultScore').style.background = pct>=80?'linear-gradient(135deg,var(--accent3),#22d3a0)':pct>=60?'linear-gradient(135deg,var(--accent),var(--accent2))':'linear-gradient(135deg,var(--accent5),#fb923c)';
+  document.getElementById('resultScore').style.webkitBackgroundClip='text';
+  document.getElementById('resultScore').style.webkitTextFillColor='transparent';
+
+  let grade='',gradeClass='';
+  if(pct>=90){grade='AP Score: 5 — Excellent!';gradeClass='grade-5';}
+  else if(pct>=75){grade='AP Score: 4 — Strong';gradeClass='grade-4';}
+  else if(pct>=60){grade='AP Score: 3 — Passing';gradeClass='grade-3';}
+  else{grade='Keep Studying — Review Simulations';gradeClass='grade-low';}
+  document.getElementById('resultGrade').textContent=grade;
+  document.getElementById('resultGrade').className='result-grade '+gradeClass;
+
+  const bd = document.getElementById('breakdown');
+  bd.innerHTML = QUESTIONS.map((q,qi)=>{
+    const s=scoreArr[qi];
+    const icon=s===true?'✓':s==='partial'?'~':'✗';
+    const cls=s===true?'br-correct':s==='partial'?'br-partial':'br-wrong';
+    const label=s===true?'Correct':s==='partial'?'Attempted (FR)':'Incorrect';
+    return `<div class="breakdown-row"><span class="br-icon">${icon}</span><span class="br-q">Q${q.n}: ${q.text.replace(/<[^>]+>/g,'').substring(0,55)}…</span><span class="br-result ${cls}">${label}</span></div>`;
+  }).join('');
+
+  document.getElementById('results').style.display='block';
+  if(pct>=80) launchConfetti();
+}
+
+function retryQuiz(){
+  answered=new Array(QUESTIONS.length).fill(false);
+  scoreArr=new Array(QUESTIONS.length).fill(null);
+  liveScore=0;
+  document.getElementById('results').style.display='none';
+  document.getElementById('quizBody').style.display='';
+  document.getElementById('submitBtn').style.display='';
+  document.querySelector('.progress-bar-wrap').style.display='';
+  document.querySelector('.quiz-header').style.display='';
+  buildQuiz();
+  window.scrollTo({top:0,behavior:'smooth'});
+}
+
+// ── CONFETTI ──
+function launchConfetti(){
+  const colors=['#7c9ef8','#a78bfa','#34d399','#fbbf24','#f87171','#fb7185'];
+  for(let i=0;i<80;i++){
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.style.cssText=`position:fixed;left:${Math.random()*100}vw;top:-10px;width:${6+Math.random()*8}px;height:${6+Math.random()*8}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};pointer-events:none;z-index:9999;transition:transform ${1.5+Math.random()}s ease,opacity 1s ease`;
+      document.body.appendChild(el);
+      requestAnimationFrame(()=>{el.style.transform=`translateY(${80+Math.random()*60}vh) rotate(${Math.random()*720}deg)`;el.style.opacity='0';});
+      setTimeout(()=>el.remove(),2500);
+    },i*30);
+  }
+}
+
+// Handle submit on option click for immediate feedback option
+// (we use submit button instead for better AP exam simulation)
+// Allow Enter in FR to not submit accidentally
+document.addEventListener('keydown',e=>{if(e.key==='Enter'&&e.target.classList.contains('fr-input'))e.preventDefault();});
+
+buildQuiz();
+</script>
+</body>
+</html>
