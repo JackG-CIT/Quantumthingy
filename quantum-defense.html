@@ -60,7 +60,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
 .back-link{color:var(--muted);text-decoration:none;font-size:13px;border:1px solid var(--border);border-radius:8px;padding:8px 20px;transition:all .2s}
 .back-link:hover{color:var(--blue);border-color:var(--blue)}
 .wave-announce{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron',sans-serif;font-size:28px;font-weight:700;color:var(--yellow);pointer-events:none;z-index:50;opacity:0;text-shadow:0 0 20px rgba(245,185,50,.5)}
-#speedBtn{background:var(--surface2);border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:4px 12px;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
+#speedBtn{background:var(--surface2);border:1px solid var(--border2);color:var(--muted);border-radius:8px;padding:4px 12px;font-family:'Space Grotesk',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;width:75px;}
 #speedBtn:hover{border-color:var(--cyan);color:var(--cyan)}
 .stat-row{display:flex;justify-content:space-between;font-size:11px;padding:2px 0}
 .stat-row .sk{color:var(--muted)}
@@ -77,7 +77,7 @@ body{font-family:'Space Grotesk',sans-serif;background:var(--bg);color:var(--tex
   <div class="stat-pill score"><span class="label">SCORE</span><span class="val" id="scoreVal">0</span></div>
   <div class="spacer"></div>
   <button class="btn-sm" onclick="devLogin()">⚙ Dev</button>
-  <button id="speedBtn" onclick="toggleSpeed()">▶▶ 2×</button>
+  <button id="speedBtn" onclick="toggleSpeed()">▶ 1×</button>
   <button class="btn-sm" id="startWaveBtn" onclick="startWave()">▶ Start Wave</button>
   <button class="btn-sm danger" onclick="location.href='index.html'">← Back</button>
 </div>
@@ -240,7 +240,7 @@ const TILE=38;
 let COLS,ROWS,canvas,ctx;
 let gameState='menu'; // menu,playing,between,gameover,win
 let speed=1,frame=0;
-let hp=20,cash=500,score=0,waveNum=0; // INCREASED STARTING CASH TO 500
+let hp=20,cash=500,score=0,waveNum=0;
 let towers=[],enemies=[],projectiles=[],particles=[],floatTexts=[];
 let selectedTowerType=null,selectedTower=null;
 let waveQueue=[],waveSpawnTimer=0,waveActive=false;
@@ -336,7 +336,7 @@ function resize(){
 // ════════════════════════════════════════════
 function startGame(){
   document.getElementById('overlay').style.display='none';
-  hp=20;cash=500;score=0;waveNum=0; // INCREASED STARTING CASH TO 500
+  hp=20;cash=500;score=0;waveNum=0; 
   towers=[];enemies=[];projectiles=[];particles=[];floatTexts=[];
   selectedTowerType=null;selectedTower=null;
   waveActive=false;waveQueue=[];
@@ -388,8 +388,19 @@ function spawnEnemy(){
 // MAIN GAME LOOP
 // ════════════════════════════════════════════
 function toggleSpeed(){
-  speed=speed===1?2:1;
-  document.getElementById('speedBtn').textContent=speed===1?'▶▶ 2×':'▶ 1×';
+  if (speed === 1) {
+    speed = 2;
+    document.getElementById('speedBtn').textContent = '▶▶ 2×';
+  } else if (speed === 2) {
+    speed = 4;
+    document.getElementById('speedBtn').textContent = '▶▶▶ 4×';
+  } else if (speed === 4) {
+    speed = 8;
+    document.getElementById('speedBtn').textContent = '▶▶▶▶ 8×';
+  } else {
+    speed = 1;
+    document.getElementById('speedBtn').textContent = '▶ 1×';
+  }
 }
 
 let lastTime=0;
@@ -415,7 +426,6 @@ function update(dt){
   }
   if(waveActive&&waveQueue.length===0&&enemies.length===0){
     waveActive=false;
-    // INCREASED WAVE CLEAR BONUS
     const waveBonus = 50 + waveNum * 15;
     cash += waveBonus;
     updateUI();
